@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const commentSchema = new mongoose.Schema(
   {
@@ -9,19 +9,23 @@ const commentSchema = new mongoose.Schema(
     },
     author: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', 
+      ref: 'User',
       required: true,
     },
     post: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Post', 
+      ref: 'Post',
       required: true,
     },
+    likes: [{ 
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User' 
+    }],
   },
   {
     timestamps: true,
   }
 );
 
-module.exports = mongoose.model('Comment', commentSchema);
+const Comment = mongoose.model('Comment', commentSchema);
 export default Comment;

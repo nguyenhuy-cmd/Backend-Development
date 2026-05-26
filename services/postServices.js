@@ -1,82 +1,85 @@
-import jwt from 'jsonwebtoken';
+import Post from '../models/Post.js';
 
-const generateToken = (id) => {
-    return jwt.sign({ _id: id }, process.env.JWT_SECRET, {
-        expiresIn: '1d'
-    });
-};
 
 export const createPost = async (title, content, category, author, images) => {
-    const post = new Post({
-        title,
-        content,
-        category,
-        author,
-        images
-    });
+    const post = await Post.create({ title, content, category, author, images });
+    return post;
+};
+
+
+export const getAllPosts = async (page = 1, limit = 10, search = '') => {
+    const filter = {};
+    if (search) {
+        filter.$or = [
+            { title: { $regex: search, $options: 'i' } },
+            { content: { $regex: search, $options: 'i' } }
+        ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const allPosts = await Post.find(filter)
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+
+    const totalPosts = await Post.countDocuments(filter);
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    return {
+        allPosts,
+        pagination: { page, limit, totalPosts, totalPages }
+    };
+};
+
+export const getPostById = async (id) => {
+    const post = await Post.findById(id).populate('author', 'name avatar');
+    if (!post) {
+        const error = new Error('Bài viết không tồn tại');
+        error.statusCode = 404;
+        throw error;
+    }
+    return post;
+};
+
+
+export const updatePost = async (id, userId, updateData) => {
+    const post = await Post.findById(id);
+    if (!post) {
+        const error = new Error('Không tìm thấy bài viết');
+        error.statusCode = 404;
+        throw error;
+    }
+    if (post.author.toString() !== userId) {
+        const error = new Error('Bạn không có quyền sửa bài viết này');
+        error.statusCode = 403;
+        throw error;
+    }
+
+    const { title, content, category } = updateData;
+    post.title = title || post.title;
+    post.content = content || post.content;
+    post.category = category || post.category;
+
     await post.save();
     return post;
 };
- export const getAllPost = async (req, res) => {
 
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const search = req.query.search || '';
 
-            const filter = {};
-            if(search) {
-                filter.$or = [
-                    {title: {$regex: search, $options: 'i'}},
-                    {content: {$regex: search, $options: 'i'}}
-                ]
-            }
+export const deletePost = async (id, userId) => {
 
-            const skip = (page - 1) * limit;
-
-            const allPosts = await Post.find(filter)
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1 });
-
-            const totalPosts = await Post.countDocuments(filter);
-            const totalPages = Math.ceil(totalPosts / limit);
-
-            res.status(200).json({
-                allPosts,
-                pagination: {
-                    page,
-                    limit,
-                    totalPosts,
-                    totalPages
-                }
-            });
-    } catch (error) {
-        console.error('Lỗi khi lấy tất cả bài đăng:', error);
-        res.status(500).json({ message: 'Lỗi server' });
-    }
- }
- export const getByIdPost = async(req, res)=> {
-    const {id} = req.params;
-    const post = await Post.findById(id).populate('author', 'name avatar');
+    const post = await Post.findById(id);
     if (!post) {
-        return res.status(404).json({ message: 'Bài viết không tồn tại' });
+        const error = new Error('Bài viết không tồn tại');
+        error.statusCode = 404;
+        throw error;
     }
-    res.status(200).json(post);
- }
- export const updatePost = async(req, res)=> {
-    const {id} = req.params;
-    const post = await Post.findByIdAndUpdate(id, req.body, {new: true});
-    if (!post) {
-        return res.status(404).json({ message: 'Bài viết không tồn tại' });
+    if (post.author.toString() !== userId) {
+        const error = new Error('Bạn không có quyền xóa bài viết này');
+        error.statusCode = 403;
+        throw error;
     }
-    res.status(200).json(post);
- }
- export const deletePost = async(req, res)=> {
-    const {id} = req.params;
-    const post = await Post.findByIdAndDelete(id);
-    if (!post) {
-        return res.status(404).json({ message: 'Bài viết không tồn tại' });
-    }
-    res.status(200).json(post);
- }
+
+    await post.deleteOne();
+    return post;
+};
