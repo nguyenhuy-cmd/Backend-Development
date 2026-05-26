@@ -2,7 +2,7 @@ import joi from 'joi';
 
 
 export const registerSchema = joi.object({
-    username: joi.string().min(3).max(30).required().messages({
+    name: joi.string().min(3).max(30).required().messages({
         'string.empty': 'Tên không được để trống',
         'string.min': 'Tên phải có ít nhất 3 ký tự',
         'any.required': 'Tên là bắt buộc'
