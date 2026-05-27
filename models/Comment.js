@@ -17,10 +17,25 @@ const commentSchema = new mongoose.Schema(
       ref: 'Post',
       required: true,
     },
-    likes: [{ 
+    likes: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default:[]
+        },
+    ],
+    dislikes:[
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: []
+        }
+    ],
+    parentComment:{
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User' 
-    }],
+      ref: 'Comment',
+      default: null
+    }
   },
   {
     timestamps: true,

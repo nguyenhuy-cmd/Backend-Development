@@ -27,13 +27,30 @@ const commentController = {
         await commentService.deleteComment(commentId, userId);
         res.status(200).json({ message: 'Xóa bình luận thành công' });
     }),
-     likeComment: asyncHandler(async (req, res) => {
-        const { commentId } = req.params;
-        const userId = req.user._id;
-        const { comment, liked } = await commentService.likeComment(commentId, userId);
-        const message = liked ? 'Đã like bình luận' : 'Đã bỏ like bình luận';
-        res.status(200).json({ message, comment, liked });
-     })
+     toggleLikeComment: asyncHandler(async (req, res) => {
+    const { id } = req.params;  
+    const userId = req.user._id; 
+
+    const result = await commentService.toggleLike(id, userId);
+
+    res.status(200).json({
+      message: result.isLiked ? 'Đã thích bài viết thành công' : 'Đã hủy thích bài viết',
+      likesCount: result.likesCount,
+      dislikesCount: result.dislikesCount
+    });
+  }),
+  toggleDislikeComment: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user._id;
+    
+    const result = await commentService.toggleDislike(id, userId);
+
+    res.status(200).json({
+      message: result.isDisliked ? 'Đã chê bài viết thành công' : 'Đã hủy chê bài viết',
+      likesCount: result.likesCount,
+      dislikesCount: result.dislikesCount
+    });
+  })
 };
 
 export default commentController;

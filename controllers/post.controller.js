@@ -34,7 +34,31 @@ const postController = {
         const updateData = req.body;
         const post = await postService.updatePost(id, req.user._id, updateData);
         res.status(200).json({ message: 'Cập nhật thành công', post });
-    })
+    }),
+    toggleLikePost: asyncHandler(async (req, res) => {
+    const { id } = req.params;  
+    const userId = req.user._id; 
+
+    const result = await postService.toggleLike(id, userId);
+
+    res.status(200).json({
+      message: result.isLiked ? 'Đã thích bài viết thành công' : 'Đã hủy thích bài viết',
+      likesCount: result.likesCount,
+      dislikesCount: result.dislikesCount
+    });
+  }),
+  toggleDislikePost: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const result = await postService.toggleDislike(id, userId);
+
+    res.status(200).json({
+      message: result.isDisliked ? 'Đã chê bài viết thành công' : 'Đã hủy chê bài viết',
+      likesCount: result.likesCount,
+      dislikesCount: result.dislikesCount
+    });
+  })
 };
 
 export default postController;

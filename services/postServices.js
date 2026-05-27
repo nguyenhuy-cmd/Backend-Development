@@ -41,8 +41,6 @@ export const getPostById = async (id) => {
     }
     return post;
 };
-
-
 export const updatePost = async (id, userId, updateData) => {
     const post = await Post.findById(id);
     if (!post) {
@@ -83,3 +81,55 @@ export const deletePost = async (id, userId) => {
     await post.deleteOne();
     return post;
 };
+
+export const toggleLike = async (postId, userId) => {
+    const post = await Post.findById(postId);
+    if (!post) {
+      const error = new Error('Không tìm thấy bài viết');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const isLiked = post.likes.some(id=>id.toString() === userId);
+    const isDisliked = post.dislikes.some(id=>id.toString() === userId);
+
+    if (isLiked) {
+      post.likes.pull(userId); 
+    } else {
+      post.likes.push(userId); 
+      if (isDisliked) post.dislikes.pull(userId); 
+    }
+
+    await post.save();
+    return {
+      isLiked: !isLiked,
+      likesCount: post.likes.length,
+      dislikesCount: post.dislikes.length
+    };
+};
+ 
+export const toggleDislike = async (postId, userId) => {
+    const post = await Post.findById(postId);
+    if (!post) {
+      const error = new Error('Không tìm thấy bài viết');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const isLiked = post.likes.some(id=>id.toString() === userId);
+    const isDisliked = post.dislikes.some(id=>id.toString() === userId);
+
+    if (isDisliked) {
+      post.dislikes.pull(userId); 
+    } else {
+      post.dislikes.push(userId); 
+      if (isLiked) post.likes.pull(userId); 
+    }
+
+    await post.save();
+    return {
+      isDisliked: !isDisliked,
+      likesCount: post.likes.length,
+      dislikesCount: post.dislikes.length
+    };
+  }

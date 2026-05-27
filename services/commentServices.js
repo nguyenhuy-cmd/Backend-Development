@@ -49,20 +49,54 @@ export const deleteComment = async (commentId, userId) => {
     return comment;
 };
 
-export const likeComment = async (commentId, userId) => {
+export const toggleLike = async (commentId, userId) => {
     const comment = await Comment.findById(commentId);
     if (!comment) {
-        const error = new Error('Không tìm thấy bình luận');
-        error.statusCode = 404;
-        throw error;
+      const error = new Error('Không tìm thấy bình luận');
+      error.statusCode = 404;
+      throw error;
     }
-    const alreadyLiked = comment.likes.some(id => id.equals(userId));
-    if (alreadyLiked) {
-        comment.likes.pull(userId);
-        await comment.save();
-        return { comment, liked: false };
+
+    const isLiked = comment.likes.some(id=>id.toString() === userId);
+    const isDisliked = comment.dislikes.some(id=>id.toString() === userId);
+
+    if (isLiked) {
+      comment.likes.pull(userId); 
+    } else {
+      comment.likes.push(userId); 
+      if (isDisliked) comment.dislikes.pull(userId); 
     }
-    comment.likes.push(userId);
+
     await comment.save();
-    return { comment, liked: true };
-};
+    return {
+      isLiked: !isLiked,
+      likesCount: comment.likes.length,
+      dislikesCount: comment.dislikes.length
+    };
+}
+
+export const toggleDislike = async (commentId, userId) => {
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      const error = new Error('Không tìm thấy bình luận');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const isLiked = comment.likes.some(id=>id.toString() === userId);
+    const isDisliked = comment.dislikes.some(id=>id.toString() === userId);
+
+    if (isDisliked) {
+      comment.dislikes.pull(userId); 
+    } else {
+      comment.dislikes.push(userId); 
+      if (isLiked) comment.likes.pull(userId); 
+    }
+
+    await comment.save();
+    return {
+      isDisliked: !isDisliked,
+      likesCount: comment.likes.length,
+      dislikesCount: comment.dislikes.length
+    };
+  }
