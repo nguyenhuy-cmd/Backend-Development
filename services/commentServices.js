@@ -1,4 +1,5 @@
 import Comment from '../models/Comment.js';
+import Post from '../models/Post.js';
 
 export const createComment = async (content, postId, userId) => {
     const comment = await Comment.create({
@@ -40,11 +41,17 @@ export const deleteComment = async (commentId, userId) => {
         error.statusCode = 404;
         throw error;
     }
-    if (!comment.author.equals(userId)) {
+
+    const post = await Post.findById(comment.post);
+    const isCommentAuthor = comment.author.equals(userId);
+    const isPostOwner = post && post.author.equals(userId);
+
+    if (!isCommentAuthor && !isPostOwner) {
         const error = new Error('Bạn không có quyền xóa bình luận này');
         error.statusCode = 403;
         throw error;
     }
+
     await comment.deleteOne();
     return comment;
 };

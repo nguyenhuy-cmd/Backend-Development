@@ -5,18 +5,21 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
 import postRoutes from "./routes/post.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
-
+import cors from "cors";
 dotenv.config({
     path: "./config/.env"
 });
 
 const app = express();
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
+app.use('/public', express.static('public'));
+
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
     console.log("Kết nối MongoDB thành công");

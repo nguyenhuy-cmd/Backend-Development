@@ -30,9 +30,15 @@ const userSchema = new mongoose.Schema(
         enum: ['user', 'admin'],
         default: 'user'
   },
-  isVerified: {
-    type: Boolean,
-    default: false,
+  isVerified: { 
+    type: Boolean, 
+    default: false // Mặc định mới tạo tài khoản là chưa xác thực
+  },
+  otp: { 
+    type: String 
+  },
+  otpExpires: { 
+    type: Date 
   },
   verificationToken: {
     type: String,

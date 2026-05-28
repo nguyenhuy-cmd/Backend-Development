@@ -9,7 +9,7 @@ const generateToken = (id) => {
     });
 };
 
-export const registerUser = async (name, email, password) => {
+export const registerUser = async (name, email, password,otp, otpExpires ) => {
     const userExist = await User.findOne({ email });
     if (userExist) throw new Error('Email đã tồn tại');
 
@@ -23,7 +23,9 @@ export const registerUser = async (name, email, password) => {
         email,
         password: hashedPassword,
         verificationToken,
-        verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000
+        verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
+        otp,
+        otpExpires,
     });
 
     await user.save();
@@ -40,13 +42,19 @@ export const registerUser = async (name, email, password) => {
 
 export const loginUser = async (email, password) => {
     const user = await User.findOne({ email });
+    
     if (!user)
         throw new Error('Email không tồn tại');
+    
+    if (!user.isVerified){
+    const error = new Error('Tài khoản chưa được xác thực email');
+    error.statusCode = 403;
+    throw error;}
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
         throw new Error('Mật khẩu không chính xác');
 
-    user.lastLogin = new Date();
     await user.save();
     return {
         id: user._id.toString(),

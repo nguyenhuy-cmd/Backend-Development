@@ -2,12 +2,19 @@ import Post from '../models/Post.js';
 
 
 export const createPost = async (title, content, category, author, images) => {
-    const post = await Post.create({ title, content, category, author, images });
-    return post;
+    const newPost = new Post({
+    title,
+    content,
+    category,
+    author,
+    image: images 
+  });
+  await newPost.save();
+    return newPost;
 };
 
 
-export const getAllPosts = async (page = 1, limit = 10, search = '') => {
+export const getAllPosts = async (page = 1, limit = 10, search = '', category = '') => {
     const filter = {};
     if (search) {
         filter.$or = [
@@ -15,10 +22,14 @@ export const getAllPosts = async (page = 1, limit = 10, search = '') => {
             { content: { $regex: search, $options: 'i' } }
         ];
     }
+    if (category) {
+        filter.category = category;
+    }
 
     const skip = (page - 1) * limit;
 
-    const allPosts = await Post.find(filter)
+    const posts = await Post.find(filter)
+        .populate('author', 'name avatar') 
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 });
@@ -27,8 +38,10 @@ export const getAllPosts = async (page = 1, limit = 10, search = '') => {
     const totalPages = Math.ceil(totalPosts / limit);
 
     return {
-        allPosts,
-        pagination: { page, limit, totalPosts, totalPages }
+        posts,
+        totalPages,
+        currentPage: page,
+        total: totalPosts
     };
 };
 
@@ -39,7 +52,10 @@ export const getPostById = async (id) => {
         error.statusCode = 404;
         throw error;
     }
-    return post;
+    const postObj = post.toObject();
+    postObj.likeCount = post.likes.length;     // ✅ thêm
+    postObj.dislikeCount = post.dislikes.length;
+    return postObj;
 };
 export const updatePost = async (id, userId, updateData) => {
     const post = await Post.findById(id);
@@ -48,17 +64,17 @@ export const updatePost = async (id, userId, updateData) => {
         error.statusCode = 404;
         throw error;
     }
-    if (post.author.toString() !== userId) {
+    if (!post.author.equals(userId)) {
         const error = new Error('Bạn không có quyền sửa bài viết này');
         error.statusCode = 403;
         throw error;
     }
 
-    const { title, content, category } = updateData;
-    post.title = title || post.title;
-    post.content = content || post.content;
-    post.category = category || post.category;
-
+    const { title, content, category, image } = updateData;
+    if (title !== undefined) post.title = title;
+    if (content !== undefined) post.content = content;
+    if (category !== undefined) post.category = category;
+    if (image !== undefined) post.image = image;
     await post.save();
     return post;
 };
@@ -72,7 +88,7 @@ export const deletePost = async (id, userId) => {
         error.statusCode = 404;
         throw error;
     }
-    if (post.author.toString() !== userId) {
+    if (!post.author.equals(userId)) {
         const error = new Error('Bạn không có quyền xóa bài viết này');
         error.statusCode = 403;
         throw error;

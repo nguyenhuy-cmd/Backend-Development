@@ -3,18 +3,25 @@ import * as postService from '../services/postServices.js';
 
 const postController = {
     createPost: asyncHandler(async (req, res) => {
-        const { title, content, category, images } = req.body;
+        const { title, content, category } = req.body;
         const author = req.user._id;
-        await postService.createPost(title, content, category, author, images);
-        res.status(201).json({ message: 'Tạo bài viết thành công' });
+        
+        let images = '';
+        if(req.file){
+          images = `http://localhost:5001/public/image/${req.file.filename}`;
+        }
+
+        const newpost = await postService.createPost(title, content, category, author, images);
+        res.status(201).json({ message: 'Tạo bài viết thành công', post: newpost });
     }),
 
     getAllPosts: asyncHandler(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const search = req.query.search || '';
+        const category = req.query.category || '';
 
-        const result = await postService.getAllPosts(page, limit, search);
+        const result = await postService.getAllPosts(page, limit, search, category);
         res.status(200).json(result);
     }),
 
