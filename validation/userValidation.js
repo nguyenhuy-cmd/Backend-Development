@@ -41,3 +41,24 @@ export const validateData = (schema) => {
     next(); 
   };
 };
+export const forgotPasswordSchema = joi.object({
+    email: joi.string().email().required().messages({
+        'string.empty': 'Vui lòng nhập email',
+        'string.email': 'Email không hợp lệ'
+    })
+});
+
+export const resetPasswordSchema = joi.object({
+    email: joi.string().email().required().messages({
+        'string.empty': 'Vui lòng nhập email',
+        'string.email': 'Email không hợp lệ'
+    }),
+    otp: joi.string().length(6).required().messages({
+        'string.empty': 'Vui lòng nhập mã OTP',
+        'string.length': 'Mã OTP phải có 6 ký tự'
+    }),
+    newPassword: joi.string().min(6).required().messages({
+        'string.empty': 'Vui lòng nhập mật khẩu mới',
+        'string.min': 'Mật khẩu phải có ít nhất 6 ký tự'
+    })
+});

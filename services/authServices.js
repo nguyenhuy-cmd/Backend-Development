@@ -64,4 +64,75 @@ export const loginUser = async (email, password) => {
         avatar: user.avatar,
         token: generateToken(user._id)
     };
+
+    
 }
+export const forgotPassword = async (email) => {
+    const user = await User.findOne({email});
+    if(!user){
+        const error = new Error('Email không tồn tại');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    user.otp = otp;
+    user.otpExpires = otpExpires;
+    await user.save();
+    
+    return {email: user.email, otp};
+    
+}
+
+export  const resetPassword = async (email, otp, newPassword) => {
+    const user = await User.findOne({ email });
+    if (!user) {
+        const error = new Error('Email không tồn tại');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    if(user.otp !== otp){
+        const error = new Error('Mã otp không đúng');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if(user.otpExpires < Date.now()){
+        const  error = new Error('Mã OTP đã hết hạn')
+        error.statusCode = 400;
+        throw error;
+    }
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    return  {message: 'Đặt lại mật khẩu thành công'};
+}
+
+export const changePassword = async (userId, oldPassword, newPassword) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        const error = new Error('Không tìm thấy người dùng');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if(!isMatch){
+        const error = new Error('Mật khẩu cũ không đúng');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    return {message: 'Đổi mật khẩu thành công'};
+}
+
