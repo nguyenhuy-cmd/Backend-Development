@@ -13,8 +13,6 @@ export const registerUser = async (name, email, password,otp, otpExpires ) => {
     const userExist = await User.findOne({ email });
     if (userExist) throw new Error('Email đã tồn tại');
 
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -22,8 +20,6 @@ export const registerUser = async (name, email, password,otp, otpExpires ) => {
         name,
         email,
         password: hashedPassword,
-        verificationToken,
-        verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
         otp,
         otpExpires,
     });
@@ -41,7 +37,7 @@ export const registerUser = async (name, email, password,otp, otpExpires ) => {
 };
 
 export const loginUser = async (email, password) => {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     
     if (!user)
         throw new Error('Email không tồn tại');
@@ -68,7 +64,7 @@ export const loginUser = async (email, password) => {
     
 }
 export const forgotPassword = async (email) => {
-    const user = await User.findOne({email});
+    const user = await User.findOne({email: email.toLowerCase()});
     if(!user){
         const error = new Error('Email không tồn tại');
         error.statusCode = 404;
@@ -87,7 +83,7 @@ export const forgotPassword = async (email) => {
 }
 
 export  const resetPassword = async (email, otp, newPassword) => {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
         const error = new Error('Email không tồn tại');
         error.statusCode = 404;

@@ -8,10 +8,10 @@ import upload from '../middlewares/uploadMiddleware.js';
 const router = express.Router();
 
 // Upload middleware phải đặt TRƯỚC validatePost để parse form-data
-router.post('/', authMiddleware, upload.single('image'), validatePost, postController.createPost);
+router.post('/', authMiddleware, upload.array('image', 5), validatePost, postController.createPost);
 router.get('/', postController.getAllPosts);
 router.get('/:id', postController.getPost);
-router.put('/:id', authMiddleware, validatePost, postController.updatePost);
+router.put('/:id', authMiddleware,upload.array('image', 5), validatePost, postController.updatePost);
 router.delete('/:id', authMiddleware, postController.deletePost);
 router.post('/:id/like', authMiddleware, postController.toggleLikePost);
 router.post('/:id/dislike', authMiddleware, postController.toggleDislikePost);

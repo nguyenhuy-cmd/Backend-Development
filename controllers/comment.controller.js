@@ -28,10 +28,10 @@ const commentController = {
         res.status(200).json({ message: 'Xóa bình luận thành công' });
     }),
      toggleLikeComment: asyncHandler(async (req, res) => {
-    const { id } = req.params;  
+    const { commentId } = req.params;  
     const userId = req.user._id; 
 
-    const result = await commentService.toggleLike(id, userId);
+    const result = await commentService.toggleLike(commentId, userId);
 
     res.status(200).json({
       message: result.isLiked ? 'Đã thích bài viết thành công' : 'Đã hủy thích bài viết',
@@ -40,10 +40,10 @@ const commentController = {
     });
   }),
   toggleDislikeComment: asyncHandler(async (req, res) => {
-    const { id } = req.params;
+    const { commentId } = req.params;
     const userId = req.user._id;
     
-    const result = await commentService.toggleDislike(id, userId);
+    const result = await commentService.toggleDislike(commentId, userId);
 
     res.status(200).json({
       message: result.isDisliked ? 'Đã chê bài viết thành công' : 'Đã hủy chê bài viết',

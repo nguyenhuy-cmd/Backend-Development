@@ -8,7 +8,7 @@ const postController = {
         
         let images = '';
         if(req.file){
-          images = `http://localhost:5001/public/image/${req.file.filename}`;
+          images = `${req.protocol}://${req.get('host')}/public/image/${req.file.filename}`;
         }
 
         const newpost = await postService.createPost(title, content, category, author, images);
@@ -38,7 +38,10 @@ const postController = {
     }),
     updatePost: asyncHandler(async (req, res) => {
         const { id } = req.params;
-        const updateData = req.body;
+        const updateData = { ...req.body };
+        if (req.file) {
+          updateData.image = `${req.protocol}://${req.get('host')}/public/image/${req.file.filename}`;
+        }
         const post = await postService.updatePost(id, req.user._id, updateData);
         res.status(200).json({ message: 'Cập nhật thành công', post });
     }),

@@ -11,7 +11,7 @@ export const sendEmail = async (to, subject, text) => {
     });
 
     await transporter.sendMail({
-      from: `Trung Tâm Hỗ Trợ <${process.env.EMAIL_USER}>`,
+      from: `WEB MXH <${process.env.EMAIL_USER}>`,
       to: to,
       subject: subject,
       text: text

@@ -73,7 +73,7 @@ export const authController = {
   }),
   resendOtp: asyncHandler(async (req, res) => {
     const { email } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -90,8 +90,9 @@ export const authController = {
 
 export const verifyOTP = asyncHandler(async (req, res) => {
   const { email, otp } = req.body;
+  const normalizedEmail = email.toLowerCase();
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
 
   
